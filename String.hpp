@@ -20,7 +20,8 @@ class String {
         if consteval {
             return new T[count];
         } else {
-            return reinterpret_cast<T*>(AllocatorType::allocate(sizeof(T) * count));
+            auto mem = AllocatorType::allocate(sizeof(T) * count);
+            return new (mem) T[count];
         }
     }
     constexpr static void deallocate(T* ptr) {
@@ -38,8 +39,12 @@ class String {
     }
 
 public:
+    using value_type               = T;
+    using size_type                = SizeType;
     constexpr static SizeType npos = -1;
     struct StringIterator {
+        using value_type                = T;
+        using size_type                 = SizeType;
         String*                   str   = nullptr;
         SizeType                  index = npos;
         constexpr StringIterator& operator++() {
@@ -156,7 +161,6 @@ public:
     }
     constexpr StringIterator find(const String& str, SizeType begin = 0) {
         if (size < str.size || str.size == 0) return {this, npos};
-        SizeType current = 0;
         for (SizeType i = begin; i < size - str.size + 1; i++) {
             bool matched = true;
             for (SizeType j = 0; j < str.size - 1; j++) {
